@@ -1,0 +1,32 @@
+name: Vita
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: vitasdk/vitasdk:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Outils
+        run: command -v cmake || apk add --no-cache cmake make
+
+      - name: Compilation
+        run: |
+          cmake -S . -B build
+          cmake --build build
+
+      - name: Publication
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: build ${{ github.run_number }}
+          files: build/monde.vpk
+          make_latest: true
