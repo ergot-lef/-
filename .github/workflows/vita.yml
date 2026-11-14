@@ -25,7 +25,7 @@ jobs:
 
       - name: Compilation
         run: |
-          for app in monde jardin ecrivain; do
+          for app in monde jardin ecrivain evasion; do
             cmake -S $app -B build/$app
             cmake --build build/$app
           done
@@ -39,4 +39,5 @@ jobs:
             build/monde/monde.vpk
             build/jardin/jardin.vpk
             build/ecrivain/ecrivain.vpk
+            build/evasion/evasion.vpk
           make_latest: true

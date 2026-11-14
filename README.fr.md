@@ -2,15 +2,16 @@
 
 *[English version](README.md)*
 
-Trois petites expériences d'intelligence et de vie artificielles pour PS Vita (hackée, HENkaku).
+Quatre petites expériences d'intelligence et de vie artificielles pour PS Vita (hackée, HENkaku).
 
 | Dossier | Application | En une phrase |
 |---|---|---|
 | [`monde/`](monde) | **-** | Un monde sans intention : de la mémoire brute où des programmes apparaissent, se recopient et s'affrontent tout seuls. |
 | [`jardin/`](jardin) | **Jardin** | Des créatures avec un vrai petit cerveau de neurones, qui doivent manger, survivre aux hivers et se reproduire. |
 | [`ecrivain/`](ecrivain) | **Écrivain** | Un petit réseau de neurones qui lit un roman de Jules Verne en boucle et apprend à écrire en français. |
+| [`evasion/`](evasion) | **Évasion** | Des bonshommes articulés, enfermés dans une cellule, apprennent seuls à bouger, à sortir et à franchir des obstacles. |
 
-Chaque modification poussée sur `main` déclenche la compilation sur GitHub : les trois `.vpk` sont publiés dans les *Releases*. Il suffit de les copier sur la Vita et de les installer avec VitaShell.
+Chaque modification poussée sur `main` déclenche la compilation sur GitHub : les quatre `.vpk` sont publiés dans les *Releases*. Il suffit de les copier sur la Vita et de les installer avec VitaShell.
 
 Le code commun (dessin à l'écran, police avec accents) est dans [`common/`](common).
 
@@ -66,6 +67,24 @@ Le principe des grands modèles de langage, en minuscule : **deviner la lettre s
 
 ---
 
+## Évasion
+
+Personne ne leur apprend à bouger : ils doivent trouver tout seuls.
+
+- **Le corps** : un bonhomme en fil de fer de 11 points (tête, cou, bassin, genoux, chevilles, talons, orteils), avec gravité, frottement et os de longueur fixe.
+- **Les muscles** : hanches et genoux. À chaque instant, le cerveau choisit l'angle visé par chaque articulation. Les muscles changent la posture mais **ne créent pas d'élan par magie** : pour avancer, il faut pousser contre le sol. (Une première version de la physique laissait les bonshommes s'envoler à coups de jambes : l'évolution avait trouvé la faille en quelques générations.)
+- **Le cerveau** : 15 entrées (angles des articulations, penche du buste, hauteur, vitesse, pieds au sol, un rythme, distance, hauteur et largeur du prochain obstacle), 12 neurones, 4 sorties.
+- **Le parcours** : une cellule avec une porte entrouverte, puis des marches et des trous de plus en plus difficiles.
+- **L'évolution** : 40 bonshommes essaient en même temps. Les plus avancés deviennent les parents de la génération suivante (mélange de deux cerveaux, plus des mutations).
+- **La règle**, à changer avec SELECT :
+  - *libre* : il peut tomber et continuer. Dans les tests sur PC, l'évolution invente vite une **reptation sur le dos**, plus facile à découvrir que la marche ;
+  - *stricte* : la tête qui touche le sol élimine le bonhomme. L'évolution est obligée de chercher l'équilibre : c'est beaucoup plus dur et beaucoup plus lent.
+
+**Commandes** : L / R pour la vitesse, □ pour voir le cerveau du meneur, SELECT pour la règle, START pour la pause et la courbe des progrès, △ maintenu 3 s pour tout recommencer.
+**Fichier** : `ux0:data/evasion/evasion.bin`.
+
+---
+
 ## Compiler à la main
 
 Avec [VitaSDK](https://vitasdk.org) :
@@ -75,7 +94,7 @@ Avec [VitaSDK](https://vitasdk.org) :
 curl -L -o pg800.txt https://www.gutenberg.org/cache/epub/800/pg800.txt
 python3 ecrivain/tools/prepare_livre.py pg800.txt ecrivain/livre.txt
 
-for app in monde jardin ecrivain; do cmake -S $app -B build/$app && cmake --build build/$app; done
+for app in monde jardin ecrivain evasion; do cmake -S $app -B build/$app && cmake --build build/$app; done
 ```
 
 Versions PC sans écran, pour expérimenter :
@@ -84,4 +103,5 @@ Versions PC sans écran, pour expérimenter :
 gcc -O2 -o pc_sim     monde/tools/pc_sim.c monde/src/world.c -lm          # ./pc_sim 5000 images/
 gcc -O2 -o pc_garden  jardin/tools/pc_garden.c jardin/src/garden.c -lm    # ./pc_garden 240000
 gcc -O3 -o pc_train   ecrivain/tools/pc_train.c ecrivain/src/model.c -lm  # ./pc_train ecrivain/livre.txt 3000000
+gcc -O2 -o pc_evasion evasion/tools/pc_evasion.c evasion/src/sim.c -lm    # ./pc_evasion 300
 ```

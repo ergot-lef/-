@@ -2,15 +2,16 @@
 
 *[Version française](README.fr.md)*
 
-Three small artificial life and artificial intelligence experiments for the PS Vita (hacked, HENkaku).
+Four small artificial life and artificial intelligence experiments for the PS Vita (hacked, HENkaku).
 
 | Folder | App | In one sentence |
 |---|---|---|
 | [`monde/`](monde) | **-** | A world without intent: raw memory where programs appear, copy themselves and compete on their own. |
 | [`jardin/`](jardin) | **Jardin** (garden) | Creatures with a real little neural brain that must eat, survive winters and reproduce. |
 | [`ecrivain/`](ecrivain) | **Écrivain** (writer) | A tiny neural network that reads a Jules Verne novel over and over and learns to write French. |
+| [`evasion/`](evasion) | **Évasion** (escape) | Jointed stick figures locked in a cell learn on their own to move, get out and clear obstacles. |
 
-Every push to `main` triggers a build on GitHub: the three `.vpk` files are published under *Releases*. Copy them to the Vita and install them with VitaShell.
+Every push to `main` triggers a build on GitHub: the four `.vpk` files are published under *Releases*. Copy them to the Vita and install them with VitaShell.
 
 Shared code (screen drawing, a font with French accents) lives in [`common/`](common).
 
@@ -66,6 +67,24 @@ The principle behind large language models, in miniature: **guess the next lette
 
 ---
 
+## Évasion (escape)
+
+Nobody teaches them to move: they have to work it out.
+
+- **The body**: an 11-point stick figure (head, neck, hip, knees, ankles, heels, toes) with gravity, friction and fixed-length bones.
+- **The muscles**: hips and knees. At every moment the brain picks the target angle of each joint. Muscles change the posture but **do not create momentum out of thin air**: to move forward, you must push against the ground. (A first version of the physics let them fly by kicking: evolution found the loophole within a few generations.)
+- **The brain**: 15 inputs (joint angles, torso lean, height, speed, feet on the ground, a rhythm, distance, height and width of the next obstacle), 12 neurons, 4 outputs.
+- **The course**: a cell with a half-open door, then steps and pits that get harder.
+- **Evolution**: 40 figures try at once. The ones that get furthest parent the next generation (two brains mixed, plus mutations).
+- **The rule**, switched with SELECT:
+  - *free*: they may fall and keep going. In PC tests, evolution quickly invents **crawling on its back**, easier to discover than walking;
+  - *strict*: the head touching the ground eliminates the figure. Evolution must find balance: much harder and much slower.
+
+**Controls**: L / R for speed, □ to show the leader's brain, SELECT to switch the rule, START for pause and the progress curve, hold △ for 3 s to start over.
+**File**: `ux0:data/evasion/evasion.bin`.
+
+---
+
 ## Building by hand
 
 With [VitaSDK](https://vitasdk.org):
@@ -75,7 +94,7 @@ With [VitaSDK](https://vitasdk.org):
 curl -L -o pg800.txt https://www.gutenberg.org/cache/epub/800/pg800.txt
 python3 ecrivain/tools/prepare_livre.py pg800.txt ecrivain/livre.txt
 
-for app in monde jardin ecrivain; do cmake -S $app -B build/$app && cmake --build build/$app; done
+for app in monde jardin ecrivain evasion; do cmake -S $app -B build/$app && cmake --build build/$app; done
 ```
 
 Headless PC versions, to experiment:
@@ -84,4 +103,5 @@ Headless PC versions, to experiment:
 gcc -O2 -o pc_sim     monde/tools/pc_sim.c monde/src/world.c -lm          # ./pc_sim 5000 images/
 gcc -O2 -o pc_garden  jardin/tools/pc_garden.c jardin/src/garden.c -lm    # ./pc_garden 240000
 gcc -O3 -o pc_train   ecrivain/tools/pc_train.c ecrivain/src/model.c -lm  # ./pc_train ecrivain/livre.txt 3000000
+gcc -O2 -o pc_evasion evasion/tools/pc_evasion.c evasion/src/sim.c -lm    # ./pc_evasion 300
 ```
