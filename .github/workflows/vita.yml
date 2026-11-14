@@ -16,17 +16,27 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Outils
-        run: command -v cmake || apk add --no-cache cmake make
+        run: command -v cmake && command -v python3 || apk add --no-cache cmake make python3 curl
+
+      - name: Livre de l'Écrivain (Project Gutenberg, domaine public)
+        run: |
+          curl -sSL -o /tmp/pg800.txt https://www.gutenberg.org/cache/epub/800/pg800.txt
+          python3 ecrivain/tools/prepare_livre.py /tmp/pg800.txt ecrivain/livre.txt
 
       - name: Compilation
         run: |
-          cmake -S . -B build
-          cmake --build build
+          for app in monde jardin ecrivain; do
+            cmake -S $app -B build/$app
+            cmake --build build/$app
+          done
 
       - name: Publication
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: build ${{ github.run_number }}
-          files: build/monde.vpk
+          files: |
+            build/monde/monde.vpk
+            build/jardin/jardin.vpk
+            build/ecrivain/ecrivain.vpk
           make_latest: true

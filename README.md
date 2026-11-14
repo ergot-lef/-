@@ -2,64 +2,86 @@
 
 *[Version française](README.fr.md)*
 
-A world without intent, for the PS Vita.
+Three small artificial life and artificial intelligence experiments for the PS Vita (hacked, HENkaku).
 
-There is no goal, no reward, no script. You seed a world, let it run, and watch what it becomes. Maybe nothing. Nobody knows in advance, not even the author of the code.
+| Folder | App | In one sentence |
+|---|---|---|
+| [`monde/`](monde) | **-** | A world without intent: raw memory where programs appear, copy themselves and compete on their own. |
+| [`jardin/`](jardin) | **Jardin** (garden) | Creatures with a real little neural brain that must eat, survive winters and reproduce. |
+| [`ecrivain/`](ecrivain) | **Écrivain** (writer) | A tiny neural network that reads a Jules Verne novel over and over and learns to write French. |
 
-## What the world is
+Every push to `main` triggers a build on GitHub: the three `.vpk` files are published under *Releases*. Copy them to the Vita and install them with VitaShell.
 
-- A single 522,240-byte block of memory, split into 8,160 tapes of 64 bytes laid on a 120 × 68 grid.
-- **Every byte is a pixel.** A tape is an 8 × 8 pixel square, and the whole grid fills the screen (960 × 544). Nothing is drawn: the screen *is* the memory.
-- At first everything is noise, drawn from a **seed** made of the console's hardware randomness mixed with time and sensor noise. No run can ever be replayed.
+Shared code (screen drawing, a font with French accents) lives in [`common/`](common).
 
-### Starting physics
+---
 
-Each epoch, every tape meets a nearby neighbour (distance ≤ 2). Both tapes are joined end to end (128 bytes) and **executed as a program** in a tiny two-head language: move a head, change a byte, copy from one head to the other, loop. Then they are split apart. A few bytes also change at random.
+## - (monde)
 
-The meaning of each byte value ("which instruction is this?") lives in a **table that is part of the world**. At first only ten randomly chosen values mean anything. But the table lives, mutates and can be overwritten like everything else: **the physics itself can change**.
+There is no goal, no reward, no script. You seed a world, let it run, and watch what it becomes. Maybe nothing.
 
-### Wiring
+- A single 522,240-byte block of memory, split into 8,160 tapes of 64 bytes on a 120 × 68 grid. **Every byte is a pixel**: the screen *is* the memory.
+- At first everything is noise, drawn from the console's hardware randomness. No run can ever be replayed.
+- Each epoch, every tape meets a neighbour. Both are joined end to end and **executed as a program** (move a head, change a byte, copy, loop), then split apart. A few bytes also change at random.
+- The meaning of each instruction lives in a **table that is part of the world**: the physics itself can be rewritten.
+- A few tapes are wired to the outside, unprotected: the instruction table (tapes 0–3), the colour palette (4–15), sensor input (16: touch, buttons, sticks, motion, microphone, time, battery) and sound (last row, looped at 8,000 Hz).
 
-A few tapes are simply connected to the outside. They are not protected and live like the others:
+**Controls**: START pauses and shows the log curves (entropy, diversity, instruction density, activity, sound). While paused, hold △ for 3 s to seed a new world.
+**Files**: `ux0:data/-/monde.bin` (full state) and `journal.csv` (measurements every 10 s, no interpretation).
 
-| Tapes | Role |
-|---|---|
-| 0–3 | the instruction table (the physics) |
-| 4–15 | the palette: the colour of each byte value |
-| 16 | input: touch panels, buttons, sticks, accelerometer, gyroscope, microphone, time, battery, rewritten every frame |
-| last row | sound: 7,680 bytes looped at 8,000 Hz |
+Inspiration: Tierra, Avida, and *Computational Life* (Agüera y Arcas et al., 2024), where self-copying programs appear spontaneously in a random soup.
 
-## On the console
+---
 
-- **START** (outside the world): pause / resume.
-- While paused, the picture dims and the log curves appear, top to bottom: entropy, diversity, instruction density, activity, sound.
-- While paused, **hold TRIANGLE** (3 s) to seed a new world. The old one is lost.
-- The world is saved every 2 minutes and on every pause, and resumes at launch.
+## Jardin (garden)
 
-At first the sound area holds random noise: that's expected. Lower the volume if needed.
+Creatures in a world that pushes back. Nobody tells them what to do: what works is passed on, the rest disappears.
 
-### Files (`ux0:data/-/`)
+- **The ground**: food regrows depending on soil fertility and **the season** (plentiful in summer, scarce in winter). A year lasts about 3 min 20 s at ×1 speed.
+- **Each creature's brain** is a small neural network with memory:
+  - 9 inputs: food and neighbours to the left, ahead and to the right, its energy, a bit of noise, a constant;
+  - 1 to 16 hidden neurons, which also listen to their own previous state;
+  - 3 outputs: turn, move, attack.
+- **Living costs energy**: moving, attacking, and even **thinking** (each neuron burns a little). A bigger brain must pay for itself.
+- **Having offspring** happens above an energy threshold. The child's brain is a mutated copy, and may gain or lose a neuron.
+- **Attacking** drains energy from the creature in front. Nothing forces hunting: if predators appear, evolution found them.
+- At zero energy a creature dies and feeds the soil. If everyone dies, new random creatures arrive (counted as an "extinction").
 
-- `monde.bin`: the full world state.
-- `journal.csv`: one line every 10 seconds, numbers only (time, epoch, entropy, diversity, density, activity, sound). No interpretation.
+**Controls**: touch a creature to watch **its brain think live** (inputs, neurons, outputs, connection strengths). L / R to slow down or speed up time (×1 to ×1000). START for pause and curves: population, average brain size, hunting, food. Hold △ for 3 s to seed a new garden.
+**File**: `ux0:data/jardin/jardin.bin`, saved every 2 minutes and on every pause.
 
-## Building
+---
 
-The build runs automatically on GitHub on every change: the `.vpk` is published in *Releases*.
+## Écrivain (writer)
 
-By hand, with [VitaSDK](https://vitasdk.org):
+The principle behind large language models, in miniature: **guess the next letter**.
+
+- The network looks at the **last 8 letters**. Each becomes 12 numbers (its "embedding"), which go through **192 hidden neurons**, then an output layer gives a probability for each of the 96 possible letters.
+- It reads *Around the World in Eighty Days* by Jules Verne, in French (Project Gutenberg, public domain), over and over. At each letter it compares its guess to the real letter and **nudges all its weights** (backpropagation).
+- At first it writes gibberish, then syllables, then words, then fragments of sentences that look French without meaning anything.
+
+**On screen**: what it writes, live; the 8 letters it looks at; its 192 neurons lighting up (green positive, red negative); its hesitations (top 4 letters); its error curve in bits per letter (6.6 for pure chance, about 2.7 after a few million letters on PC).
+**Controls**: X for a new page, ↑↓ to set boldness (temperature), START to pause, hold △ for 3 s to forget everything.
+**Files** (`ux0:data/ecrivain/`): `cerveau.bin` (its weights) and `carnet.txt`, a sample of its writing **every 10 minutes**, to read its progress in the morning.
+
+---
+
+## Building by hand
+
+With [VitaSDK](https://vitasdk.org):
 
 ```sh
-cmake -S . -B build && cmake --build build
+# the writer's book
+curl -L -o pg800.txt https://www.gutenberg.org/cache/epub/800/pg800.txt
+python3 ecrivain/tools/prepare_livre.py pg800.txt ecrivain/livre.txt
+
+for app in monde jardin ecrivain; do cmake -S $app -B build/$app && cmake --build build/$app; done
 ```
 
-Headless PC version, to experiment with the physics:
+Headless PC versions, to experiment:
 
 ```sh
-gcc -O2 -o pc_sim tools/pc_sim.c src/world.c -lm
-./pc_sim 5000 images/     # epochs, optional folder for PPM snapshots
+gcc -O2 -o pc_sim     monde/tools/pc_sim.c monde/src/world.c -lm          # ./pc_sim 5000 images/
+gcc -O2 -o pc_garden  jardin/tools/pc_garden.c jardin/src/garden.c -lm    # ./pc_garden 240000
+gcc -O3 -o pc_train   ecrivain/tools/pc_train.c ecrivain/src/model.c -lm  # ./pc_train ecrivain/livre.txt 3000000
 ```
-
-## Inspiration
-
-This world draws on artificial-life experiments where self-copying programs appear spontaneously in a random soup (Tierra, Avida, and *Computational Life*, Agüera y Arcas et al., 2024). Nothing guarantees the same will happen here.
