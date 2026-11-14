@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     for (long s = 1; s <= total; s++) {
         r = r * 6364136223846793005ull + 1442695040888963407ull;
         int i = CTX + (int)((r >> 33) % (uint64_t)(n - CTX));
-        float lr = 0.03f;
+        float lr = 0.01f;
         model_train(&m, text, i, lr);
         if (s % 200000 == 0) {
             double sec = (double)(clock() - t0) / CLOCKS_PER_SEC;

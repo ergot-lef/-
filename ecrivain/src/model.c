@@ -160,6 +160,7 @@ void model_train(Model *m, const int *text, int i, float lr)
     memset(dx, 0, sizeof dx);
     for (int h = 0; h < HID; h++) {
         float g = dh[h] * (1.0f - t.h[h] * t.h[h]);
+        if (g > 1.0f) g = 1.0f; else if (g < -1.0f) g = -1.0f;   /* évite les emballements */
         float *w = m->w1[h];
         for (int k = 0; k < IN; k++) { dx[k] += g * w[k]; w[k] -= lr * g * t.x[k]; }
         m->b1[h] -= lr * g;
